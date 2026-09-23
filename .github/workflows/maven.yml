@@ -77,7 +77,7 @@ jobs:
       SVC_ID: customer-service
       RAILWAY_TOKEN: ${{secrets.RAILWAY_TOKEN}}
       steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v3
         - run: railway up --service=${{env.SVC_ID}}
 
 
