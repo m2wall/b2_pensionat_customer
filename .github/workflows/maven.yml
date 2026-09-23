@@ -41,10 +41,14 @@ jobs:
         cache: maven
 
 
-    - name: Build with Maven
+    - name: Run Tests
       run: mvn test
-
-    - name: Build with Maven
+      env:
+        SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/customerdb
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: root
+        
+    - name: Build Package
       run: mvn -B package -DskipTests
 
     - name: Login to Dockerhub
@@ -52,15 +56,14 @@ jobs:
       run: echo "${{secrets.DOCKERHUB_TOKEN}}" | docker login -u "${{secrets.DOCKERHUB_USERNAME}}" --password-stdin
 
     - name: Docker build
+      if: github.event_name == 'push'
       run: |
         docker build -t ${{secrets.DOCKERHUB_USERNAME}}/customer-service:${{github.run_number}} .
 
     - name: Push to dockerhub
+      if: github.event_name == 'push'
       run: |
         docker push ${{secrets.DOCKERHUB_USERNAME}}/customer-service:${{github.run_number}}
 
-      env:
-        SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/customerdb
-        SPRING_DATASOURCE_USERNAME: root
-        SPRING_DATASOURCE_PASSWORD: root
+
 
