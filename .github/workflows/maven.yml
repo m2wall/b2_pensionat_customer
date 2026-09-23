@@ -16,7 +16,6 @@ jobs:
         os: [ubuntu-latest]
         java: [25]
 
-
     services:
       mysql:
         image: mysql:8
@@ -33,7 +32,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up JDK 25
+    - name: Set up JDK ${{matrix.java}}
       uses: actions/setup-java@v4
       with:
         java-version: ${{matrix.java}}
@@ -50,19 +49,26 @@ jobs:
     - name: Build Package
       run: mvn -B package -DskipTests
 
-    - name: Login to Dockerhub
-      if: github.event_name == 'push'
-      run: echo "${{secrets.DOCKERHUB_TOKEN}}" | docker login -u "${{secrets.DOCKERHUB_USERNAME}}" --password-stdin
+  docker:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: action/checkout@v4
 
-    - name: Docker build
-      if: github.event_name == 'push'
-      run: |
-        docker build -t ${{secrets.DOCKERHUB_USERNAME}}/customer-service:${{github.run_number}} .
+      - name: Login to Dockerhub
+        if: github.event_name == 'push'
+        run: echo "${{secrets.DOCKERHUB_TOKEN}}" | docker login -u "${{secrets.DOCKERHUB_USERNAME}}" --password-stdin
 
-    - name: Push to dockerhub
-      if: github.event_name == 'push'
-      run: |
-        docker push ${{secrets.DOCKERHUB_USERNAME}}/customer-service:${{github.run_number}}
+      - name: Docker build
+        if: github.event_name == 'push'
+        run: |
+          docker build -t ${{secrets.DOCKERHUB_USERNAME}}/customer-service:${{github.run_number}} .
+
+      - name: Push to dockerhub
+        if: github.event_name == 'push'
+        run: |
+          docker push ${{secrets.DOCKERHUB_USERNAME}}/customer-service:${{github.run_number}}
 
 
 
